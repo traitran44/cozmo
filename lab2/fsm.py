@@ -28,6 +28,7 @@ class State:
 class Idle(State):
     def __init__(self):
         self.observed_symbol = None
+        print("idle_state")
 
     def run(self, sdk_conn):
         robot = sdk_conn.wait_for_robot()
@@ -77,4 +78,3 @@ if __name__ == "__main__":
         cozmo.connect(state.run)
     except cozmo.ConnectionError as e:
         sys.exit("A connection error occurred: %s" % e)
-
