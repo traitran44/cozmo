@@ -46,7 +46,7 @@ class Idle(State):
                 # Keep observing image
                 latest_image = robot.world.latest_image
                 new_image = latest_image.raw_image
-                classifier = load('clf.joblib')
+                classifier = load('clf.joblib') #needs file that is too big for github
                 img_features = ImageClassifier.extract_image_features(classifier, [new_image])
                 label = classifier.predict(img_features)
                 robot.say_text(label[0]).wait_for_completed()
