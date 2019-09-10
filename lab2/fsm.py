@@ -1,7 +1,10 @@
+# Cozmo password: M02HTALN900F
 import sys
 import cozmo
 import datetime
 import time
+from joblib import load
+from imgclassification import ImageClassifier
 
 
 STATES = {
@@ -43,9 +46,12 @@ class Idle(State):
                 # Keep observing image
                 latest_image = robot.world.latest_image
                 new_image = latest_image.raw_image
-                robot.say_text("drone_test").wait_for_completed()
+                classifier = load('clf.joblib')
+                img_features = ImageClassifier.extract_image_features(classifier, [new_image])
+                label = classifier.predict(img_features)
+                robot.say_text(label[0]).wait_for_completed()
                 timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-                new_image.save("./imgs/" + str("drone_test") + "_" + timestamp + ".bmp")
+                new_image.save("./imgs/" + str(label[0]) + "_" + timestamp + ".bmp")
                 time.sleep(3)
 
 
