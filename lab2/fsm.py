@@ -108,6 +108,7 @@ if __name__ == "__main__":
     start_state = Idle()
     fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
+    cozmo.robot.Robot.pickup_object()
     try:
         cozmo.connect(fsm.run)
     except cozmo.ConnectionError as e:
