@@ -27,7 +27,6 @@ class State:
         pass
 
 
-
 class Idle(State):
     def __init__(self):
         self.observed_symbol = None
@@ -77,10 +76,21 @@ class Drone(State):
         pass
 
 
+class FSM():
+
+    def __init__(self, start_state: State):
+        self.state = start_state
+
+    def run(self, sdk_conn):
+        self.sdk_conn = sdk_conn
+        while not self.state is None:
+            self.state = self.state.run(sdk_conn=self.sdk_conn)
+
 if __name__ == "__main__":
-    state = Idle()
+    start_state = Idle()
+    fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
     try:
-        cozmo.connect(state.run)
+        cozmo.connect(fsm.run)
     except cozmo.ConnectionError as e:
         sys.exit("A connection error occurred: %s" % e)
