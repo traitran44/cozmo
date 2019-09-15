@@ -7,13 +7,14 @@ import math
 from joblib import load
 from imgclassification import ImageClassifier
 
-
 STATES = {
     'idle': 0,
     'drone': 1,
     'order': 2,
     'inspection': 3
 }
+
+
 class State:
     def __init__(self):
         pass
@@ -26,6 +27,87 @@ class State:
 
     def goto(self):
         pass
+
+
+class Order(State):
+    def __init__(self):
+        self.observed_symbol = None
+        self.robot = None
+        print("Order State")
+
+    def run(self, sdk_conn):
+        self.robot = sdk_conn.wait_for_robot()
+        self.robot.camera.image_stream_enabled = True
+        self.robot.camera.color_image_enabled = False
+        self.robot.camera.enable_auto_exposure()
+        self.robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+
+        distance = 250
+        drive_duration = 2
+
+        self.robot.drive_straight(cozmo.util.distance_mm(distance), cozmo.util.speed_mmps(distance / drive_duration),
+                                  should_play_anim=True,
+                                  in_parallel=False,
+                                  num_retries=0).wait_for_completed()
+        self.robot.drive_wheels(l_wheel_speed=12 * math.pi, r_wheel_speed=50 * math.pi, duration=5)
+
+        while True:
+            pass
+
+    def next_state(self):
+        return None
+
+
+class Inspection(State):
+    def __init__(self):
+        self.observed_symbol = None
+        self.robot = None
+        print("Order State")
+
+    def run(self, sdk_conn):
+        self.robot = sdk_conn.wait_for_robot()
+        self.robot.camera.image_stream_enabled = True
+        self.robot.camera.color_image_enabled = False
+        self.robot.camera.enable_auto_exposure()
+        self.robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+
+        distance = 150
+        drive_duration = 2
+
+        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0)
+        self.robot.move_lift(speed=-math.pi)
+        drive_action = self.robot.drive_straight(cozmo.util.distance_mm(distance),
+                                                 cozmo.util.speed_mmps(distance / drive_duration),
+                                                 should_play_anim=True,
+                                                 in_parallel=True,
+                                                 num_retries=0).wait_for_completed()
+
+        lift_height = True
+        distance = 200
+        drive_duration = 1
+        angle = 90
+        rotate_duration = 1
+        for i in range(4):
+            height = 1.0 if lift_height else 0.0
+            lift_speed = math.pi / 15 if lift_height else -math.pi / 15
+            print("Height: ", height)
+            self.robot.set_lift_height(height=height, in_parallel=True, num_retries=0)
+            self.robot.move_lift(speed=lift_speed)
+            drive_action = self.robot.drive_straight(cozmo.util.distance_mm(distance),
+                                                     cozmo.util.speed_mmps(distance / drive_duration),
+                                                     should_play_anim=True,
+                                                     in_parallel=True,
+                                                     num_retries=0).wait_for_completed()
+            turn_action = self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=True,
+                                                   num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
+                                                   accel=None, angle_tolerance=None,
+                                                   is_absolute=False).wait_for_completed()
+            lift_height = not lift_height
+
+        self.robot.backup_onto_charger(max_drive_time=10)
+
+    def next_state(self):
+        return None
 
 
 class Idle(State):
@@ -47,7 +129,7 @@ class Idle(State):
                 # Keep observing image
                 latest_image = robot.world.latest_image
                 new_image = latest_image.raw_image
-                classifier = load('clf.joblib') #needs file that is too big for github
+                classifier = load('clf.joblib')  # needs file that is too big for github
                 img_features = ImageClassifier.extract_image_features(classifier, [new_image])
                 self.label = classifier.predict(img_features)[0]
                 robot.say_text(self.label).wait_for_completed()
@@ -81,16 +163,14 @@ class Drone(State):
         #     print(key, ": ", val)
         # self.robot.stop_all_motors().wait_for_completed()
         if not self.picking_up:
+            print(kwargs['obj'])
             self.picking_up = True
-            dock_cube = self.robot.dock_with_cube(kwargs['obj'], approach_angle = None,
-                alignment_type = cozmo.robot_alignment.RobotAlignmentTypes.LiftFinger,
-                distance_from_marker = None,
-                in_parallel = False, num_retries = 0).wait_for_completed()
-            # self.robot.stop_all_motors().wait_for_completed()
-            while dock_cube.state != 'action_idle':
-                self.robot.set_lift_height(height = 1, in_parallel = False).wait_for_completed()
-                # self.robot.move_lift(math.pi/4).wait_for_completed()
-                self.robot.pickup_object(kwargs['obj'], in_parallel = False, num_retries = 3).wait_for_completed()
+            self.robot.dock_with_cube(kwargs['obj'],
+                                      alignment_type=cozmo.robot_alignment.RobotAlignmentTypes.LiftFinger,
+                                      in_parallel=False,
+                                      num_retries=3).wait_for_completed()
+            self.robot.set_lift_height(height=1, in_parallel=True, num_retries=1).wait_for_completed()
+            self.robot.move_lift(math.pi / 4)
 
     def run(self, sdk_conn):
         """
@@ -104,25 +184,28 @@ class Drone(State):
 
         self.robot.say_text("drone state").wait_for_completed()
 
+        self.robot.set_lift_height(height=0, in_parallel=False, num_retries=0).wait_for_completed()
+        self.robot.move_lift(speed=-math.pi)
+
         distance = 200
         drive_duration = 2
-        self.robot.drive_straight(cozmo.util.distance_mm(distance), cozmo.util.speed_mmps(distance/drive_duration),
-            should_play_anim=True,
-            in_parallel=False,
-            num_retries=0).wait_for_completed()
+        self.robot.drive_straight(cozmo.util.distance_mm(distance), cozmo.util.speed_mmps(distance / drive_duration),
+                                  should_play_anim=True,
+                                  in_parallel=False,
+                                  num_retries=0).wait_for_completed()
 
         angle = 90
         rotate_duration = 1
         self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=False,
-            num_retries=0, speed=cozmo.util.degrees(angle/rotate_duration),
-            accel=None, angle_tolerance=None, is_absolute=False).wait_for_completed()
+                                 num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
+                                 accel=None, angle_tolerance=None, is_absolute=False).wait_for_completed()
 
         self.robot.add_event_handler(cozmo.objects.EvtObjectObserved, self.object_handler)
 
         while True:
             pass
 
-        #return self.next_state()
+        # return self.next_state()
 
     def next_state(self):
         return Idle()
@@ -134,14 +217,14 @@ class FSM():
 
     def run(self, sdk_conn):
         self.sdk_conn = sdk_conn
-        #while not self.state is None:
+        # while not self.state is None:
         self.state = self.state.run(sdk_conn=self.sdk_conn)
+
 
 if __name__ == "__main__":
     start_state = Drone()
     fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
-    cozmo.robot.Robot.pickup_object()
     try:
         cozmo.connect(fsm.run)
     except cozmo.ConnectionError as e:
