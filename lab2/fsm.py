@@ -30,6 +30,7 @@ class State:
 class Idle(State):
     def __init__(self):
         self.observed_symbol = None
+        self.label = None
         print("idle_state")
 
     def run(self, sdk_conn):
@@ -47,37 +48,49 @@ class Idle(State):
                 new_image = latest_image.raw_image
                 classifier = load('clf.joblib') #needs file that is too big for github
                 img_features = ImageClassifier.extract_image_features(classifier, [new_image])
-                label = classifier.predict(img_features)
-                robot.say_text(label[0]).wait_for_completed()
+                self.label = classifier.predict(img_features)[0]
+                robot.say_text(self.label).wait_for_completed()
                 timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-                new_image.save("./imgs/" + str(label[0]) + "_" + timestamp + ".bmp")
-                time.sleep(3)
+                new_image.save("./imgs/" + str(self.label) + "_" + timestamp + ".bmp")
 
+                next = self.next_state()
 
-        if self.observed_symbol == STATES['drone']:
-            self.next_state()
+                if not next is None:
+                    return next
 
         """
         Go to next states
         """
 
     def next_state(self):
-        pass
+        if self.label == "drone":
+            return Drone()
+        return None
 
 
 class Drone(State):
     def __init__(self):
         pass
 
-    def run(self):
-        pass
+    def run(self, sdk_conn):
+        """
+        TODO HERE
+        """
+        robot = sdk_conn.wait_for_robot()
+        robot.camera.image_stream_enabled = True
+        robot.camera.color_image_enabled = False
+        robot.camera.enable_auto_exposure()
+        robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+
+        robot.say_text("drone state").wait_for_completed()
+
+        return self.next_state()
 
     def next_state(self):
-        pass
+        return Idle()
 
 
 class FSM():
-
     def __init__(self, start_state: State):
         self.state = start_state
 
