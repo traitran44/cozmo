@@ -3,6 +3,7 @@ import sys
 import cozmo
 import datetime
 import time
+import math
 from joblib import load
 from imgclassification import ImageClassifier
 
@@ -70,26 +71,58 @@ class Idle(State):
 
 class Drone(State):
     def __init__(self):
-        pass
+        self.robot = None
+        self.picking_up = False
 
-    def object_handler(self, args):
-        print(args)
+    def object_handler(self, *args, **kwargs):
+        # for arg in args:
+        #     print(arg)
+        # for key, val in kwargs.items():
+        #     print(key, ": ", val)
+        # self.robot.stop_all_motors().wait_for_completed()
+        if not self.picking_up:
+            self.picking_up = True
+            dock_cube = self.robot.dock_with_cube(kwargs['obj'], approach_angle = None,
+                alignment_type = cozmo.robot_alignment.RobotAlignmentTypes.LiftFinger,
+                distance_from_marker = None,
+                in_parallel = False, num_retries = 0).wait_for_completed()
+            # self.robot.stop_all_motors().wait_for_completed()
+            while dock_cube.state != 'action_idle':
+                self.robot.set_lift_height(height = 1, in_parallel = False).wait_for_completed()
+                # self.robot.move_lift(math.pi/4).wait_for_completed()
+                self.robot.pickup_object(kwargs['obj'], in_parallel = False, num_retries = 3).wait_for_completed()
 
     def run(self, sdk_conn):
         """
         TODO HERE
         """
-        robot = sdk_conn.wait_for_robot()
-        robot.camera.image_stream_enabled = True
-        robot.camera.color_image_enabled = False
-        robot.camera.enable_auto_exposure()
-        robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+        self.robot = sdk_conn.wait_for_robot()
+        self.robot.camera.image_stream_enabled = True
+        self.robot.camera.color_image_enabled = False
+        self.robot.camera.enable_auto_exposure()
+        self.robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
 
-        robot.say_text("drone state").wait_for_completed()
+        self.robot.say_text("drone state").wait_for_completed()
 
-        robot.add_event_handler(cozmo.objects.EvtObjectAppeared, self.object_handler)
+        distance = 200
+        drive_duration = 2
+        self.robot.drive_straight(cozmo.util.distance_mm(distance), cozmo.util.speed_mmps(distance/drive_duration),
+            should_play_anim=True,
+            in_parallel=False,
+            num_retries=0).wait_for_completed()
 
-        return self.next_state()
+        angle = 90
+        rotate_duration = 1
+        self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=False,
+            num_retries=0, speed=cozmo.util.degrees(angle/rotate_duration),
+            accel=None, angle_tolerance=None, is_absolute=False).wait_for_completed()
+
+        self.robot.add_event_handler(cozmo.objects.EvtObjectObserved, self.object_handler)
+
+        while True:
+            pass
+
+        #return self.next_state()
 
     def next_state(self):
         return Idle()
@@ -101,11 +134,11 @@ class FSM():
 
     def run(self, sdk_conn):
         self.sdk_conn = sdk_conn
-        while not self.state is None:
-            self.state = self.state.run(sdk_conn=self.sdk_conn)
+        #while not self.state is None:
+        self.state = self.state.run(sdk_conn=self.sdk_conn)
 
 if __name__ == "__main__":
-    start_state = Idle()
+    start_state = Drone()
     fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
     cozmo.robot.Robot.pickup_object()
