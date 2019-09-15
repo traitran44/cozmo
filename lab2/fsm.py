@@ -72,6 +72,9 @@ class Drone(State):
     def __init__(self):
         pass
 
+    def object_handler(self, args):
+        print(args)
+
     def run(self, sdk_conn):
         """
         TODO HERE
@@ -83,6 +86,8 @@ class Drone(State):
         robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
 
         robot.say_text("drone state").wait_for_completed()
+
+        robot.add_event_handler(cozmo.objects.EvtObjectAppeared, self.object_handler)
 
         return self.next_state()
 
