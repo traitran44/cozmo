@@ -6,6 +6,7 @@ import time
 import math
 from joblib import load
 from imgclassification import ImageClassifier
+import asyncio
 
 STATES = {
     'idle': 0,
@@ -73,34 +74,39 @@ class Inspection(State):
         distance = 150
         drive_duration = 2
 
-        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0)
         self.robot.move_lift(speed=-math.pi)
-        drive_action = self.robot.drive_straight(cozmo.util.distance_mm(distance),
-                                                 cozmo.util.speed_mmps(distance / drive_duration),
-                                                 should_play_anim=True,
-                                                 in_parallel=True,
-                                                 num_retries=0).wait_for_completed()
+        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0)
+        self.robot.drive_straight(cozmo.util.distance_mm(distance),
+                                  cozmo.util.speed_mmps(distance / drive_duration),
+                                  should_play_anim=True,
+                                  in_parallel=True,
+                                  num_retries=0).wait_for_completed()
 
-        lift_height = True
         distance = 200
         drive_duration = 1
         angle = 90
         rotate_duration = 1
+
+        async def lift(slf):
+            height = 0
+            while True:
+                height = (height + 1) % 2
+                lift_speed = math.pi if height == 1 else -math.pi
+                await slf.robot.set_lift_height(height=height, in_parallel=True, num_retries=0,
+                                                lift_speed=lift_speed).wait_for_completed()
+
+        asyncio.run(lift(self))
+
         for i in range(4):
-            height = 1.0 if lift_height else 0.0
-            lift_speed = math.pi / 15 if lift_height else -math.pi / 15
-            self.robot.set_lift_height(height=height, in_parallel=True, num_retries=0)
-            self.robot.move_lift(speed=lift_speed)
-            self.robot.drive_straight(cozmo.util.distance_mm(distance),
-                                      cozmo.util.speed_mmps(distance / drive_duration),
-                                      should_play_anim=True,
-                                      in_parallel=True,
-                                      num_retries=0).wait_for_completed()
-            self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=True,
-                                     num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
-                                     accel=None, angle_tolerance=None,
-                                     is_absolute=False).wait_for_completed()
-            lift_height = not lift_height
+            driving = self.robot.drive_straight(cozmo.util.distance_mm(distance),
+                                                cozmo.util.speed_mmps(distance / drive_duration),
+                                                should_play_anim=True,
+                                                in_parallel=True,
+                                                num_retries=0).wait_for_completed()
+            turning = self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=True,
+                                               num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
+                                               accel=None, angle_tolerance=None,
+                                               is_absolute=False).wait_for_completed()
 
         self.robot.backup_onto_charger(max_drive_time=10)
         return self.next_state()
@@ -193,7 +199,6 @@ class Drone(State):
                                             num_retries=0).wait_for_completed()
             self.done = True
 
-
     def run(self, sdk_conn):
         self.robot = sdk_conn.wait_for_robot()
         self.robot.camera.image_stream_enabled = True
@@ -222,7 +227,6 @@ class Drone(State):
             pass
 
         return self.next_state()
-
 
     def next_state(self):
         return Idle()
