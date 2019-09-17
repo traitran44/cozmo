@@ -50,7 +50,7 @@ class Order(State):
                                   should_play_anim=True,
                                   in_parallel=False,
                                   num_retries=0).wait_for_completed()
-        self.robot.drive_wheels(l_wheel_speed=12 * math.pi, r_wheel_speed=50 * math.pi, duration=5)
+        self.robot.drive_wheels(l_wheel_speed=10 * math.pi, r_wheel_speed=20 * math.pi, duration=18)
 
         return self.next_state()
 
@@ -75,7 +75,7 @@ class Inspection(State):
         drive_duration = 2
 
         self.robot.move_lift(speed=-math.pi)
-        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0)
+        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0).wait_for_completed()
         self.robot.drive_straight(cozmo.util.distance_mm(distance),
                                   cozmo.util.speed_mmps(distance / drive_duration),
                                   should_play_anim=True,
@@ -87,27 +87,44 @@ class Inspection(State):
         angle = 90
         rotate_duration = 1
 
-        async def lift(slf):
-            height = 0
-            while True:
-                height = (height + 1) % 2
-                lift_speed = math.pi if height == 1 else -math.pi
-                await slf.robot.set_lift_height(height=height, in_parallel=True, num_retries=0,
-                                                lift_speed=lift_speed).wait_for_completed()
-
-        asyncio.run(lift(self))
-
         for i in range(4):
+            print("moving")
             driving = self.robot.drive_straight(cozmo.util.distance_mm(distance),
                                                 cozmo.util.speed_mmps(distance / drive_duration),
                                                 should_play_anim=True,
                                                 in_parallel=True,
-                                                num_retries=0).wait_for_completed()
-            turning = self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=True,
-                                               num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
-                                               accel=None, angle_tolerance=None,
-                                               is_absolute=False).wait_for_completed()
+                                                num_retries=0)
+            height = 0
+            height = (height + 1) % 2
+            speed_factor = 8
+            lift_speed = math.pi / speed_factor if height == 1 else -math.pi / speed_factor
+            lifting = self.robot.set_lift_height(height=height, in_parallel=True, num_retries=0,
+                                                 max_speed=lift_speed)
+            self.robot.move_lift(speed=lift_speed)
+            print("Lift completed: ", lifting.is_completed)
+            lifting_completed = False
 
+            while True:
+                if driving.is_completed:
+                    self.robot.stop_all_motors()
+                    break
+
+                if self.robot.lift_ratio < 0.05:
+                    height = 1
+                elif self.robot.lift_ratio > 0.99:
+                    height = 0
+                lift_speed = math.pi / speed_factor if height == 1 else -math.pi / speed_factor
+                self.robot.set_lift_height(height=height, in_parallel=True, num_retries=0,
+                                           max_speed=lift_speed).wait_for_completed()
+                self.robot.move_lift(speed=lift_speed)
+
+            self.robot.turn_in_place(cozmo.util.degrees(angle), in_parallel=True,
+                                     num_retries=0, speed=cozmo.util.degrees(angle / rotate_duration),
+                                     accel=None, angle_tolerance=None,
+                                     is_absolute=False).wait_for_completed()
+
+        self.robot.move_lift(speed=-math.pi)
+        self.robot.set_lift_height(height=0, in_parallel=True, num_retries=0).wait_for_completed()
         self.robot.backup_onto_charger(max_drive_time=10)
         return self.next_state()
 
@@ -139,7 +156,7 @@ class Idle(State):
                 self.label = classifier.predict(img_features)[0]
                 robot.say_text(self.label).wait_for_completed()
                 timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-                new_image.save("./imgs/" + str(self.label) + "_" + timestamp + ".bmp")
+                # new_image.save("./imgs/" + str(self.label) + "_" + timestamp + ".bmp")
 
                 next = self.next_state()
 
@@ -243,7 +260,7 @@ class FSM():
 
 
 if __name__ == "__main__":
-    start_state = Idle()
+    start_state = Inspection()
     fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
     try:
