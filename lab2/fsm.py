@@ -86,6 +86,7 @@ class Inspection(State):
         drive_duration = 1
         angle = 90
         rotate_duration = 1
+        height = 0
 
         for i in range(4):
             print("moving")
@@ -94,7 +95,7 @@ class Inspection(State):
                                                 should_play_anim=True,
                                                 in_parallel=True,
                                                 num_retries=0)
-            height = 0
+            # height = 0
             height = (height + 1) % 2
             speed_factor = 8
             lift_speed = math.pi / speed_factor if height == 1 else -math.pi / speed_factor
@@ -109,7 +110,7 @@ class Inspection(State):
                     self.robot.stop_all_motors()
                     break
 
-                if self.robot.lift_ratio < 0.05:
+                if self.robot.lift_ratio < 0.01:
                     height = 1
                 elif self.robot.lift_ratio > 0.99:
                     height = 0
