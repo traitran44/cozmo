@@ -260,7 +260,7 @@ class FSM():
 
 
 if __name__ == "__main__":
-    start_state = Inspection()
+    start_state = Idle()
     fsm = FSM(start_state=start_state)
     cozmo.setup_basic_logging()
     try:
