@@ -19,7 +19,13 @@ def motion_update(particles, odom):
         Returns: the list of particles represents belief \tilde{p}(x_{t} | u_{t})
                 after motion update
     """
-    motion_particles = []
+    add_odometry_noise(odom, setting.ODOM_HEAD_SIGMA, setting.ODOM_TRANS_SIGMA)
+    motion_particles = particles
+    for i in range(len(motion_particles)):
+        dx, dy = rotate_point(odom[0], odom[1], motion_particles[i].h)
+        motion_particles[i].x += dx
+        motion_particles[i].y += dy
+        motion_particles[i].h = motion_particles[i].h + odom[2]
     return motion_particles
 
 # ------------------------------------------------------------------------
@@ -47,7 +53,8 @@ def measurement_update(particles, measured_marker_list, grid):
         Returns: the list of particles represents belief p(x_{t} | u_{t})
                 after measurement update
     """
+    for i in range(len(particles)):
+        
     measured_particles = []
     return measured_particles
-
-
+def weight_update():
