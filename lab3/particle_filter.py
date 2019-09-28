@@ -53,8 +53,36 @@ def measurement_update(particles, measured_marker_list, grid):
         Returns: the list of particles represents belief p(x_{t} | u_{t})
                 after measurement update
     """
+    weights = [0] * len(particles)
     for i in range(len(particles)):
-        
-    measured_particles = []
+        particle_markers = particles[i].read_markers(grid)
+        pairs = get_match_markers(measured_marker_list, particle_markers)
+        weights[i] = weight_update(pairs)
+
+    weights = normalize_weights(weights)
+    measured_particles = resample(particles, weights)
+
     return measured_particles
-def weight_update():
+
+
+# Resample new particles based on weights
+def resample(particles, weights):
+    new_particles = []
+    return new_particles
+
+# Pair each marker to its corresponding match (with noise)
+def get_match_markers(robot_markers, particle_markers):
+    pairs = []
+    return pairs
+
+
+# Normalize s.t sum to 1
+def normalize_weights(weights):
+    norm_w = []
+    return norm_w
+
+
+# Use equation in the slide
+def weight_update(pairs):
+    w = 1
+    return w
