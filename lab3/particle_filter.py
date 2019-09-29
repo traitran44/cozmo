@@ -103,7 +103,7 @@ def get_match_markers(robot_markers, particle_markers):
         return []
     pairs = [0] * min_markers
     for i in range(min_markers):
-        distances = [[0] * len(particle_markers)] * len(robot_markers)
+        distances = [ [ 0 for a in range(len(particle_markers)) ] for b in range(len(robot_markers)) ]
         for j in range(len(robot_markers)):
             for k in range(len(particle_markers)):
                 distances[j][k] = grid_distance(robot_markers[j][0], robot_markers[j][1], particle_markers[k][0], particle_markers[k][1])
@@ -154,3 +154,9 @@ if __name__ == "__main__":
         [2, 3, 10, 22, 32, 1]
     )
     print("Sum Norm weight: ", sum(norm_w))
+
+    # test get_match_markers
+    test1 = [(2, 5, 3), (8, 4, 4)]
+    test2 = [(4, 6, 6), (2, 0, 1), (4, 3, 7)]
+    pairs = get_match_markers(test1, test2)
+    print("pairs: ", pairs)
