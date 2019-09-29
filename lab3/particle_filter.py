@@ -66,8 +66,9 @@ def measurement_update(particles, measured_marker_list, grid):
 
     if len(measured_marker_list) == 0:
         weights = [1/len(particles)] * len(particles)
+    else:
+        weights = normalize_weights(weights, particles)
 
-    weights = normalize_weights(weights, particles)
     random_count = 75
     # for i in range(len(weights)):
     #     w = weights[i]
@@ -75,6 +76,7 @@ def measurement_update(particles, measured_marker_list, grid):
     #         rand_x, rand_y = grid.random_free_place()
     #         particles[i] = Particle(rand_x, rand_y)
 
+    # Resampling particles
     measured_particles = np.random.choice(particles,
                                           size=len(particles) - random_count,
                                           replace=True, p=weights).tolist()
@@ -170,8 +172,8 @@ def weight_update(pairs, particle):
         dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
                     grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
         angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
-        dist_scale = (dist_diff ** 2) / (2 * setting.MARKER_TRANS_SIGMA ** 2)
-        angle_scale = ((angle_diff ** 2) / (2 * setting.MARKER_ROT_SIGMA ** 2))
+        dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
+        angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
         sum_diff = dist_scale + angle_scale
         prob *= math.exp(-sum_diff)
     return prob
