@@ -81,9 +81,9 @@ def get_match_markers(robot_markers, particle_markers):
     pairs = [0] * min_markers
     for i in range(min_markers):
         distances = [[0] * len(particle_markers)] * len(robot_markers)
-        for i in range(len(robot_markers)):
-            for j in range(len(particle_markers)):
-                distances[i][j] = grid_distance(robot_markers[i][0], robot_markers[i][1], particle_markers[j][0], particle_markers[j][1])
+        for j in range(len(robot_markers)):
+            for k in range(len(particle_markers)):
+                distances[j][k] = grid_distance(robot_markers[j][0], robot_markers[j][1], particle_markers[k][0], particle_markers[k][1])
         flattened_distances = [x for y in distances for x in y]
         ind = flattened_distances.index(min(flattened_distances))
         pairs[i] = robot_markers[int(ind/len(particle_markers))], particle_markers[ind%len(particle_markers)]
