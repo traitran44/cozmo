@@ -57,21 +57,26 @@ def measurement_update(particles, measured_marker_list, grid):
                 after measurement update
     """
     weights = [0.0] * len(particles)
+    empty_cnt = 0
     for i in range(len(particles)):
         particle = particles[i]
-        if grid.is_free(particle.x, particle.y):
+        if grid.is_free(particle.x, particle.y) and grid.is_in(particle.x, particle.y):
             particle_markers = particles[i].read_markers(grid)
-            # if len(measured_marker_list) > 0 and len(particle_markers) > 0:
-            #     print("Markers: ", measured_marker_list, particle_markers)
             pairs = get_match_markers(measured_marker_list, particle_markers)
+            if len(pairs) == 0:
+                empty_cnt += 1
             weights[i] = weight_update(pairs, particle)
 
-    if sum(weights) == 0:
-        weights = [1/len(particles)] * len(particles)
-    else:
-        weights = normalize_weights(weights)
-
+    weights = normalize_weights(weights, particles)
     measured_particles = resample(particles, weights, len(particles))
+
+    random_count = 75
+    measured_particles = np.random.choice(measured_particles,
+                                          size=len(measured_particles) - random_count,
+                                          replace=True, p=weights)
+    for x in range(random_count):
+        rand_x, rand_y = grid.random_free_place()
+        measured_particles.append(Particle(rand_x, rand_y))
 
     return measured_particles
 
@@ -126,13 +131,18 @@ def get_match_markers(robot_markers, particle_markers):
 
 
 # Normalize s.t sum to 1
-def normalize_weights(weights):  # Trai
+def normalize_weights(weights, particles):  # Trai
+    if sum(weights) == 0:
+        size = len(particles)
+        weights = [1 / size] * size
+
     total = sum(weights)
     norm_w = []
     for w in weights:
         norm_w.append(
             w / total
         )
+    print(sum(norm_w))
     return norm_w
 
 
@@ -156,8 +166,9 @@ def weight_update(pairs, particle):
         dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
                     grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
         angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
-        sum_diff = (dist_diff ** 2) / (2 * setting.MARKER_TRANS_SIGMA ** 2) + \
-                   ((angle_diff ** 2) / (2 * setting.MARKER_ROT_SIGMA ** 2))
+        dist_scale = (dist_diff ** 2) / (2 * setting.MARKER_TRANS_SIGMA ** 2)
+        angle_scale = ((angle_diff ** 2) / (2 * setting.MARKER_ROT_SIGMA ** 2))
+        sum_diff = dist_scale + angle_scale
         prob *= math.exp(-sum_diff)
     return prob
 
