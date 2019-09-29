@@ -64,7 +64,7 @@ def measurement_update(particles, measured_marker_list, grid):
     weights = normalize_weights(weights)
     measured_particles = resample(particles, weights, len(particles))
 
-    return measured_particles
+    return particles
 
 
 # Resample new particles based on weights
@@ -128,6 +128,11 @@ def normalize_weights(weights):  # Trai
 
 # Use equation in the slide
 def weight_update(pairs):
+    """
+    :param pairs:
+    :return:
+    """
+    print("Pairs", pairs)
     w = 1
     return w
 
