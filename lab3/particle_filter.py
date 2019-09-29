@@ -4,6 +4,7 @@ from utils import *
 import setting
 import numpy as np
 import random
+import math
 
 np.random.seed(setting.RANDOM_SEED)
 random.seed(setting.RANDOM_SEED)
@@ -55,16 +56,24 @@ def measurement_update(particles, measured_marker_list, grid):
         Returns: the list of particles represents belief p(x_{t} | u_{t})
                 after measurement update
     """
-    weights = [0] * len(particles)
+    weights = [0.0] * len(particles)
     for i in range(len(particles)):
-        particle_markers = particles[i].read_markers(grid)
-        pairs = get_match_markers(measured_marker_list, particle_markers)
-        weights[i] = weight_update(pairs)
+        particle = particles[i]
+        if grid.is_free(particle.x, particle.y):
+            particle_markers = particles[i].read_markers(grid)
+            # if len(measured_marker_list) > 0 and len(particle_markers) > 0:
+            #     print("Markers: ", measured_marker_list, particle_markers)
+            pairs = get_match_markers(measured_marker_list, particle_markers)
+            weights[i] = weight_update(pairs, particle)
 
-    weights = normalize_weights(weights)
+    if sum(weights) == 0:
+        weights = [1/len(particles)] * len(particles)
+    else:
+        weights = normalize_weights(weights)
+
     measured_particles = resample(particles, weights, len(particles))
 
-    return particles
+    return measured_particles
 
 
 # Resample new particles based on weights
@@ -103,15 +112,16 @@ def get_match_markers(robot_markers, particle_markers):
         return []
     pairs = [0] * min_markers
     for i in range(min_markers):
-        distances = [ [ 0 for a in range(len(particle_markers)) ] for b in range(len(robot_markers)) ]
+        distances = [[0 for a in range(len(particle_markers))] for b in range(len(robot_markers))]
         for j in range(len(robot_markers)):
             for k in range(len(particle_markers)):
-                distances[j][k] = grid_distance(robot_markers[j][0], robot_markers[j][1], particle_markers[k][0], particle_markers[k][1])
+                distances[j][k] = grid_distance(robot_markers[j][0], robot_markers[j][1], particle_markers[k][0],
+                                                particle_markers[k][1])
         flattened_distances = [x for y in distances for x in y]
         ind = flattened_distances.index(min(flattened_distances))
-        pairs[i] = robot_markers[int(ind/len(particle_markers))], particle_markers[ind%len(particle_markers)]
-        robot_markers.pop(int(ind/len(particle_markers)))
-        particle_markers.pop(ind%len(particle_markers))
+        pairs[i] = robot_markers[int(ind / len(particle_markers))], particle_markers[ind % len(particle_markers)]
+        robot_markers.pop(int(ind / len(particle_markers)))
+        particle_markers.pop(ind % len(particle_markers))
     return pairs
 
 
@@ -127,14 +137,29 @@ def normalize_weights(weights):  # Trai
 
 
 # Use equation in the slide
-def weight_update(pairs):
+def weight_update(pairs, particle):
     """
     :param pairs:
     :return:
     """
-    print("Pairs", pairs)
-    w = 1
-    return w
+    if len(pairs) == 0:
+        return 0.0
+
+    if len(pairs) > 0:
+        print("Pairs", pairs)
+
+    prob = 1.0
+    for pair in pairs:
+        marker_1, marker_2 = pair
+        x_1, y_1, h_1 = marker_1
+        x_2, y_2, h_2 = marker_2
+        dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
+                    grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+        angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
+        sum_diff = (dist_diff ** 2) / (2 * setting.MARKER_TRANS_SIGMA ** 2) + \
+                   ((angle_diff ** 2) / (2 * setting.MARKER_ROT_SIGMA ** 2))
+        prob *= math.exp(-sum_diff)
+    return prob
 
 
 if __name__ == "__main__":
