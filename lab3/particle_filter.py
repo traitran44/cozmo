@@ -57,24 +57,28 @@ def measurement_update(particles, measured_marker_list, grid):
                 after measurement update
     """
     weights = [0.0] * len(particles)
-    empty_cnt = 0
     for i in range(len(particles)):
         particle = particles[i]
         if grid.is_free(particle.x, particle.y) and grid.is_in(particle.x, particle.y):
             particle_markers = particles[i].read_markers(grid)
             pairs = get_match_markers(measured_marker_list, particle_markers)
-            if len(pairs) == 0:
-                empty_cnt += 1
             weights[i] = weight_update(pairs, particle)
-    print(weights)
+
+    if len(measured_marker_list) == 0:
+        weights = [1/len(particles)] * len(particles)
 
     weights = normalize_weights(weights, particles)
-    measured_particles = resample(particles, weights, len(particles))
-
     random_count = 75
-    measured_particles = np.random.choice(measured_particles,
-                                          size=len(measured_particles) - random_count,
-                                          replace=True, p=weights)
+    # for i in range(len(weights)):
+    #     w = weights[i]
+    #     if w < 0.001:
+    #         rand_x, rand_y = grid.random_free_place()
+    #         particles[i] = Particle(rand_x, rand_y)
+
+    measured_particles = np.random.choice(particles,
+                                          size=len(particles) - random_count,
+                                          replace=True, p=weights).tolist()
+
     for x in range(random_count):
         rand_x, rand_y = grid.random_free_place()
         measured_particles.append(Particle(rand_x, rand_y))
@@ -138,6 +142,7 @@ def normalize_weights(weights, particles):  # Trai
     if sum(weights) == 0:
         size = len(particles)
         weights = [1 / size] * size
+        return weights
 
     total = sum(weights)
     norm_w = []
@@ -145,7 +150,6 @@ def normalize_weights(weights, particles):  # Trai
         norm_w.append(
             w / total
         )
-    print(sum(norm_w))
     return norm_w
 
 
@@ -157,9 +161,6 @@ def weight_update(pairs, particle):
     """
     if len(pairs) == 0:
         return 0.0
-
-    if len(pairs) > 0:
-        print("Pairs", pairs)
 
     prob = 1.0
     for pair in pairs:
