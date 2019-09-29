@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5028d920-abf3-42c9-b5de-3ee9b48610a6" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/lab3.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/lab3.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/particle_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/particle_filter.py" afterDir="false" />
     </list>
@@ -50,7 +50,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.pf_gui">
+  <component name="RunManager" selected="Python.autograder">
     <configuration name="autograder" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="lab3" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -139,9 +139,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.autograder" />
         <item itemvalue="Python.pf_gui" />
         <item itemvalue="Python.setting" />
-        <item itemvalue="Python.autograder" />
         <item itemvalue="Python.particle_filter" />
       </list>
     </recent_temporary>
@@ -216,7 +216,21 @@
       <option name="project" value="LOCAL" />
       <updated>1569791557667</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Update particle_filter">
+      <created>1569793917858</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1569793917858</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Update particle_filter">
+      <created>1569793943518</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1569793943518</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -230,7 +244,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
@@ -241,31 +257,5 @@
     <MESSAGE value="Update gitignore" />
     <MESSAGE value="Update particle_filter" />
     <option name="LAST_COMMIT_MESSAGE" value="Update particle_filter" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/particle_filter.py</url>
-          <line>80</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/particle_filter.py</url>
-          <line>70</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/particle_filter.py</url>
-          <line>69</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/particle_filter.py</url>
-          <line>145</line>
-          <option name="timeStamp" value="11" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
