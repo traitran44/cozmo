@@ -95,7 +95,23 @@ def resample(particles, weights, new_size):  # Trai
 
 # Pair each marker to its corresponding match (with noise)
 def get_match_markers(robot_markers, particle_markers):
-    pairs = []
+    if len(robot_markers) > len(particle_markers):
+        min_markers = len(particle_markers)
+    else:
+        min_markers = len(robot_markers)
+    if min_markers == 0:
+        return []
+    pairs = [0] * min_markers
+    for i in range(min_markers):
+        distances = [[0] * len(particle_markers)] * len(robot_markers)
+        for j in range(len(robot_markers)):
+            for k in range(len(particle_markers)):
+                distances[j][k] = grid_distance(robot_markers[j][0], robot_markers[j][1], particle_markers[k][0], particle_markers[k][1])
+        flattened_distances = [x for y in distances for x in y]
+        ind = flattened_distances.index(min(flattened_distances))
+        pairs[i] = robot_markers[int(ind/len(particle_markers))], particle_markers[ind%len(particle_markers)]
+        robot_markers.pop(int(ind/len(particle_markers)))
+        particle_markers.pop(ind%len(particle_markers))
     return pairs
 
 
