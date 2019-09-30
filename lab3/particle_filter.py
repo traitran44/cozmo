@@ -75,9 +75,9 @@ def measurement_update(particles, measured_marker_list, grid):
             particle_markers = particles[i].read_markers(grid)
             pairs = get_match_markers(measured_marker_list, particle_markers)
             weights[i] = weight_update(pairs, particle)
-            if (len(measured_marker_list) > len(particle_markers)):
+            if len(measured_marker_list) > len(particle_markers):
                 weights[i] *= setting.SPURIOUS_DETECTION_RATE ** (len(measured_marker_list) - len(particle_markers))
-            if (len(particle_markers) > len(measured_marker_list)):
+            if len(measured_marker_list) < len(particle_markers):
                 weights[i] *= setting.DETECTION_FAILURE_RATE ** (len(particle_markers) - len(measured_marker_list))
 
     if len(measured_marker_list) == 0:
@@ -86,7 +86,6 @@ def measurement_update(particles, measured_marker_list, grid):
         weights = normalize_weights(weights, particles)
 
     # remove unlikely particles
-    random_count = 75
     for i in range(len(weights)):
         w = weights[i]
         if w < 0.0002:
@@ -94,6 +93,7 @@ def measurement_update(particles, measured_marker_list, grid):
             particles[i] = Particle(rand_x, rand_y)
 
     # Resampling particles
+    random_count = 75
     measured_particles = np.random.choice(particles,
                                           size=len(particles) - random_count,
                                           replace=True, p=weights).tolist()
