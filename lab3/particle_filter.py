@@ -75,18 +75,17 @@ def measurement_update(particles, measured_marker_list, grid):
             particle_markers = particles[i].read_markers(grid)
             pairs = get_match_markers(measured_marker_list, particle_markers)
             weights[i] = weight_update(pairs, particle)
-            if (len(measured_marker_list) > len(particle_markers)):
+            if len(measured_marker_list) > len(particle_markers):
                 weights[i] *= setting.SPURIOUS_DETECTION_RATE ** (len(measured_marker_list) - len(particle_markers))
-            if (len(particle_markers) > len(measured_marker_list)):
+            if len(measured_marker_list) < len(particle_markers):
                 weights[i] *= setting.DETECTION_FAILURE_RATE ** (len(particle_markers) - len(measured_marker_list))
 
     if len(measured_marker_list) == 0:
-        weights = [1 / len(particles)] * len(particles)
+        weights = [float(1.0 / len(particles))] * len(particles)
     else:
         weights = normalize_weights(weights, particles)
 
     # remove unlikely particles
-    random_count = 75
     for i in range(len(weights)):
         w = weights[i]
         if w < 0.0002:
@@ -94,6 +93,7 @@ def measurement_update(particles, measured_marker_list, grid):
             particles[i] = Particle(rand_x, rand_y)
 
     # Resampling particles
+    random_count = 75
     measured_particles = np.random.choice(particles,
                                           size=len(particles) - random_count,
                                           replace=True, p=weights).tolist()
@@ -163,14 +163,14 @@ def get_match_markers(robot_markers, particle_markers):
 def normalize_weights(weights, particles):  # Trai
     if sum(weights) == 0:
         size = len(particles)
-        weights = [1 / size] * size
+        weights = [1. / float(size)] * size
         return weights
 
-    total = sum(weights)
+    total = float(sum(weights) * 1.)
     norm_w = []
     for w in weights:
         norm_w.append(
-            w / total
+            float(w * 1. / total)
         )
     return norm_w
 
@@ -181,7 +181,7 @@ def weight_update(pairs, particle):
     :param pairs:
     :return:
     """
-    if len(pairs) == 0:
+    if len(pairs) == 0.:
         return 1.0
 
     prob = 1.0
@@ -189,13 +189,13 @@ def weight_update(pairs, particle):
         marker_1, marker_2 = pair
         x_1, y_1, h_1 = marker_1
         x_2, y_2, h_2 = marker_2
-        dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
-                    grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+        dist_diff = (1. * grid_distance(x_1, y_1, x2=particle.x, y2=particle.y)) - \
+                    (1. * grid_distance(x_2, y_2, x2=particle.x, y2=particle.y))
         angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
-        dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
-        angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
-        sum_diff = dist_scale + angle_scale
-        prob *= math.exp(-sum_diff)
+        dist_scale = float((dist_diff ** 2.0) / (2.0 * (setting.MARKER_TRANS_SIGMA ** 2.0)))
+        angle_scale = float((angle_diff ** 2.0) / (2.0 * (setting.MARKER_ROT_SIGMA ** 2.0)))
+        sum_diff = float(dist_scale + angle_scale)
+        prob *= float(math.exp(-sum_diff))
     return prob
 
 
