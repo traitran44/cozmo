@@ -147,15 +147,9 @@ def get_match_markers(robot_markers, particle_markers):
         distances = [[0 for a in range(len(particle_markers_copy))] for b in range(len(robot_markers_copy))]
         for j in range(len(robot_markers_copy)):
             for k in range(len(particle_markers_copy)):
-                dist_diff = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1],
+                distances[j][k] = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1],
                                           particle_markers_copy[k][0],
-                                          particle_markers_copy[k][1])  # - \
-                # grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
-                angle_diff = diff_heading_deg(robot_markers_copy[j][2], particle_markers_copy[k][2])
-                dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
-                angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
-                sum_diff = dist_scale + angle_scale
-                distances[j][k] = math.exp(-sum_diff)
+                                          particle_markers_copy[k][1])
         flattened_distances = [x for y in distances for x in y]
         ind = flattened_distances.index(min(flattened_distances))
         pairs[i] = robot_markers_copy[int(ind / len(particle_markers_copy))], particle_markers_copy[
