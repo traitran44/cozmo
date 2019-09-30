@@ -63,6 +63,10 @@ def measurement_update(particles, measured_marker_list, grid):
             particle_markers = particles[i].read_markers(grid)
             pairs = get_match_markers(measured_marker_list, particle_markers)
             weights[i] = weight_update(pairs, particle)
+            if (len(measured_marker_list) > len(particle_markers)):
+                weights[i] *= setting.SPURIOUS_DETECTION_RATE ** (len(measured_marker_list) - len(particle_markers))
+            if (len(particle_markers) > len(measured_marker_list)):
+                weights[i] *= setting.DETECTION_FAILURE_RATE ** (len(particle_markers) - len(measured_marker_list))
 
     if len(measured_marker_list) == 0:
         weights = [1/len(particles)] * len(particles)
@@ -70,11 +74,11 @@ def measurement_update(particles, measured_marker_list, grid):
         weights = normalize_weights(weights, particles)
 
     random_count = 75
-    # for i in range(len(weights)):
-    #     w = weights[i]
-    #     if w < 0.001:
-    #         rand_x, rand_y = grid.random_free_place()
-    #         particles[i] = Particle(rand_x, rand_y)
+    for i in range(len(weights)):
+        w = weights[i]
+        if w < 0.0002:
+            rand_x, rand_y = grid.random_free_place()
+            particles[i] = Particle(rand_x, rand_y)
 
     # Resampling particles
     measured_particles = np.random.choice(particles,
@@ -129,8 +133,14 @@ def get_match_markers(robot_markers, particle_markers):
         distances = [[0 for a in range(len(particle_markers_copy))] for b in range(len(robot_markers_copy))]
         for j in range(len(robot_markers_copy)):
             for k in range(len(particle_markers_copy)):
-                distances[j][k] = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1], particle_markers_copy[k][0],
-                                                particle_markers_copy[k][1])
+                dist_diff = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1], particle_markers_copy[k][0],
+                                                particle_markers_copy[k][1])# - \
+                            #grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+                angle_diff = diff_heading_deg(robot_markers_copy[j][2], particle_markers_copy[k][2])
+                dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
+                angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
+                sum_diff = dist_scale + angle_scale
+                distances[j][k] = math.exp(-sum_diff)
         flattened_distances = [x for y in distances for x in y]
         ind = flattened_distances.index(min(flattened_distances))
         pairs[i] = robot_markers_copy[int(ind / len(particle_markers_copy))], particle_markers_copy[ind % len(particle_markers_copy)]
@@ -162,15 +172,15 @@ def weight_update(pairs, particle):
     :return:
     """
     if len(pairs) == 0:
-        return 0.0
+        return 1.0
 
     prob = 1.0
     for pair in pairs:
         marker_1, marker_2 = pair
         x_1, y_1, h_1 = marker_1
         x_2, y_2, h_2 = marker_2
-        dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
-                    grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+        dist_diff = grid_distance(x_1, y_1, x_2, y_2)# - \
+                    #grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
         angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
         dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
         angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
@@ -198,7 +208,7 @@ if __name__ == "__main__":
 
     # test normalize_weights
     norm_w = normalize_weights(
-        [2, 3, 10, 22, 32, 1]
+        [2, 3, 10, 22, 32, 1], [3, 5, 5, 4, 9, 0]
     )
     print("Sum Norm weight: ", sum(norm_w))
 
