@@ -169,10 +169,10 @@ def get_match_markers(robot_markers, particle_markers):
 def normalize_weights(weights, particles):  # Trai
     if sum(weights) == 0:
         size = len(particles)
-        weights = [float(1. / size)] * size
+        weights = [1. / float(size)] * size
         return weights
 
-    total = sum(weights)
+    total = float(sum(weights) * 1.)
     norm_w = []
     for w in weights:
         norm_w.append(
