@@ -21,13 +21,25 @@ def motion_update(particles, odom):
         Returns: the list of particles represents belief \tilde{p}(x_{t} | u_{t})
                 after motion update
     """
-    add_odometry_noise(odom, setting.ODOM_HEAD_SIGMA, setting.ODOM_TRANS_SIGMA)
-    motion_particles = particles
-    for i in range(len(motion_particles)):
-        dx, dy = rotate_point(odom[0], odom[1], motion_particles[i].h)
-        motion_particles[i].x += dx
-        motion_particles[i].y += dy
-        motion_particles[i].h = motion_particles[i].h + odom[2]
+    # add_odometry_noise(odom, setting.ODOM_HEAD_SIGMA, setting.ODOM_TRANS_SIGMA)
+    # motion_particles = particles
+    # for i in range(len(motion_particles)):
+    #     dx, dy = rotate_point(odom[0], odom[1], motion_particles[i].h)
+    #     motion_particles[i].x += dx
+    #     motion_particles[i].y += dy
+    #     motion_particles[i].h = motion_particles[i].h + odom[2]
+    # return motion_particles
+
+    motion_particles = []
+    dx, dy, dh = odom
+    for particle in particles:
+        part_x, part_y, part_h = particle.xyh
+        h = add_gaussian_noise(part_h + dh, setting.ODOM_HEAD_SIGMA)
+        dx_new, dy_new = rotate_point(add_gaussian_noise(dx, setting.ODOM_TRANS_SIGMA),
+                                      add_gaussian_noise(dy, setting.ODOM_TRANS_SIGMA),
+                                      h)
+        motion_particles.append(Particle(part_x + dx_new, part_y + dy_new, h))
+
     return motion_particles
 
 
@@ -69,10 +81,11 @@ def measurement_update(particles, measured_marker_list, grid):
                 weights[i] *= setting.DETECTION_FAILURE_RATE ** (len(particle_markers) - len(measured_marker_list))
 
     if len(measured_marker_list) == 0:
-        weights = [1/len(particles)] * len(particles)
+        weights = [1 / len(particles)] * len(particles)
     else:
         weights = normalize_weights(weights, particles)
 
+    # remove unlikely particles
     random_count = 75
     for i in range(len(weights)):
         w = weights[i]
@@ -85,6 +98,7 @@ def measurement_update(particles, measured_marker_list, grid):
                                           size=len(particles) - random_count,
                                           replace=True, p=weights).tolist()
 
+    # Add random noise to distribution
     for x in range(random_count):
         rand_x, rand_y = grid.random_free_place()
         measured_particles.append(Particle(rand_x, rand_y))
@@ -133,9 +147,10 @@ def get_match_markers(robot_markers, particle_markers):
         distances = [[0 for a in range(len(particle_markers_copy))] for b in range(len(robot_markers_copy))]
         for j in range(len(robot_markers_copy)):
             for k in range(len(particle_markers_copy)):
-                dist_diff = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1], particle_markers_copy[k][0],
-                                                particle_markers_copy[k][1])# - \
-                            #grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+                dist_diff = grid_distance(robot_markers_copy[j][0], robot_markers_copy[j][1],
+                                          particle_markers_copy[k][0],
+                                          particle_markers_copy[k][1])  # - \
+                # grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
                 angle_diff = diff_heading_deg(robot_markers_copy[j][2], particle_markers_copy[k][2])
                 dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
                 angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
@@ -143,7 +158,8 @@ def get_match_markers(robot_markers, particle_markers):
                 distances[j][k] = math.exp(-sum_diff)
         flattened_distances = [x for y in distances for x in y]
         ind = flattened_distances.index(min(flattened_distances))
-        pairs[i] = robot_markers_copy[int(ind / len(particle_markers_copy))], particle_markers_copy[ind % len(particle_markers_copy)]
+        pairs[i] = robot_markers_copy[int(ind / len(particle_markers_copy))], particle_markers_copy[
+            ind % len(particle_markers_copy)]
         robot_markers_copy.pop(int(ind / len(particle_markers_copy)))
         particle_markers_copy.pop(ind % len(particle_markers_copy))
     return pairs
@@ -179,8 +195,8 @@ def weight_update(pairs, particle):
         marker_1, marker_2 = pair
         x_1, y_1, h_1 = marker_1
         x_2, y_2, h_2 = marker_2
-        dist_diff = grid_distance(x_1, y_1, x_2, y_2)# - \
-                    #grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
+        dist_diff = grid_distance(x_1, y_1, x2=particle.x, y2=particle.y) - \
+                    grid_distance(x_2, y_2, x2=particle.x, y2=particle.y)
         angle_diff = diff_heading_deg(heading1=h_1, heading2=h_2)
         dist_scale = (dist_diff ** 2) / (2 * (setting.MARKER_TRANS_SIGMA ** 2))
         angle_scale = (angle_diff ** 2) / (2 * (setting.MARKER_ROT_SIGMA ** 2))
