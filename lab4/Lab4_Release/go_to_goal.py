@@ -153,12 +153,15 @@ async def run(robot: cozmo.robot.Robot):
         robot.drive_straight(cozmo.util.distance_mm(10), cozmo.util.speed_mmps(5))
         robot.turn_in_place(cozmo.util.degrees(90), speed = cozmo.util.degrees(45))
         curr_pose = cozmo.util.Pose(cozmo.util.distance_mm(10 + last_pose.position.angle_z), cozmo.util.distance_mm(last_pose.position.y),
-            0, angle_z = cozmo.util.degrees(90 + angle_z.rotation.angle_z.degrees))
+            0, angle_z = cozmo.util.degrees(90 + last_pose.rotation.angle_z.degrees))
         odom = compute_odometry(curr_pose)
         pf.particles = motion_update(pf.particles, odom)
         marker_list, annotated_image = marker_processing(robot, camera_settings)
         pf.particles = measurement_update(pf.particles, marker_list, grid)
-        last_pose = curr_pose
+        m_x, m_y, m_h, m_confident = compute_mean_pose(pf.particles)
+        last_pose = cozmo.util.Pose(cozmo.util.distance_mm(m_x), cozmo.util.distance_mm(m_y), 0, angle_z = cozmo.util.degrees(m_h))
+        if m_confident:
+            print("converged")
 
 
 class CozmoThread(threading.Thread):
