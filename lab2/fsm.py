@@ -1,4 +1,6 @@
-# Cozmo password: M02HTALN900F
+# Rishabh Ranjan
+# Trai Tran
+
 import sys
 import cozmo
 import datetime
@@ -50,7 +52,7 @@ class Order(State):
                                   should_play_anim=True,
                                   in_parallel=False,
                                   num_retries=0).wait_for_completed()
-        self.robot.drive_wheels(l_wheel_speed=10 * math.pi, r_wheel_speed=20 * math.pi, duration=18)
+        self.robot.drive_wheels(l_wheel_speed=10 * math.pi, r_wheel_speed=20 * math.pi, duration=18.5)
 
         return self.next_state()
 
