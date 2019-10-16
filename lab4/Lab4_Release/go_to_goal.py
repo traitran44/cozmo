@@ -75,7 +75,7 @@ def compute_odometry(curr_pose, cvt_inch=True):
         last_pose.rotation.angle_z.degrees
     curr_x, curr_y, curr_h = curr_pose.position.x, curr_pose.position.y, \
         curr_pose.rotation.angle_z.degrees
-    
+
     dx, dy = rotate_point(curr_x-last_x, curr_y-last_y, -last_h)
     if cvt_inch:
         dx, dy = dx / grid.scale, dy / grid.scale
@@ -85,7 +85,7 @@ def compute_odometry(curr_pose, cvt_inch=True):
 
 async def marker_processing(robot, camera_settings, show_diagnostic_image=False):
     '''
-    Obtain the visible markers from the current frame from Cozmo's camera. 
+    Obtain the visible markers from the current frame from Cozmo's camera.
     Since this is an async function, it must be called using await, for example:
 
         markers, camera_image = await marker_processing(robot, camera_settings, show_diagnostic_image=False)
@@ -95,7 +95,7 @@ async def marker_processing(robot, camera_settings, show_diagnostic_image=False)
         - camera_settings: 3x3 matrix representing the camera calibration settings
         - show_diagnostic_image: if True, shows what the marker detector sees after processing
     Returns:
-        - a list of detected markers, each being a 3-tuple (rx, ry, rh) 
+        - a list of detected markers, each being a 3-tuple (rx, ry, rh)
           (as expected by the particle filter's measurement update)
         - a PIL Image of what Cozmo's camera sees with marker annotations
     '''
@@ -108,7 +108,7 @@ async def marker_processing(robot, camera_settings, show_diagnostic_image=False)
     # Convert the image to grayscale
     image = np.array(image_event.image)
     image = color.rgb2gray(image)
-    
+
     # Detect the markers
     markers, diag = detect.detect_markers(image, camera_settings, include_diagnostics=True)
 
@@ -149,14 +149,20 @@ async def run(robot: cozmo.robot.Robot):
         [ 0,  0,  1]
     ], dtype=np.float)
 
-    ###################
+    while True:
+        robot.drive_straight(cozmo.util.distance_mm(10), cozmo.util.speed_mmps(5))
+        robot.turn_in_place(cozmo.util.degrees(90), speed = cozmo.util.degrees(45))
+        curr_pose = cozmo.util.Pose(cozmo.util.distance_mm(10 + last_pose.position.angle_z), cozmo.util.distance_mm(last_pose.position.y),
+            0, angle_z = cozmo.util.degrees(90 + angle_z.rotation.angle_z.degrees))
+        odom = compute_odometry(curr_pose)
+        pf.particles = motion_update(pf.particles, odom)
+        marker_list, annotated_image = marker_processing(robot, camera_settings)
+        pf.particles = measurement_update(pf.particles, marker_list, grid)
+        last_pose = curr_pose
 
-    # YOUR CODE HERE
-
-    ###################
 
 class CozmoThread(threading.Thread):
-    
+
     def __init__(self):
         threading.Thread.__init__(self, daemon=False)
 
@@ -175,4 +181,3 @@ if __name__ == '__main__':
     gui.show_particles(pf.particles)
     gui.show_mean(0, 0, 0)
     gui.start()
-
