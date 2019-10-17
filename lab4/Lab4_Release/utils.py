@@ -63,7 +63,7 @@ def compute_mean_pose(particles, confident_dist=1):
     for p in particles:
         if grid_distance(p.x, p.y, m_x, m_y) < 1:
             m_count += 1
-
+    print("confidence: ", m_count/len(particles))
     return m_x, m_y, m_h, m_count > len(particles) * 0.95
 
 

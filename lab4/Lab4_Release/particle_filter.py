@@ -78,7 +78,7 @@ def measurement_update(particles, measured_marker_list, grid):
                     likelihood = math.exp(-(exp1+exp2))
                     # The line is the key to this greedy algorithm
                     # prob *= likelihood
-                    print(setting.DETECTION_FAILURE_RATE)
+                    # print(setting.DETECTION_FAILURE_RATE)
                     prob *= max(likelihood, setting.DETECTION_FAILURE_RATE*setting.SPURIOUS_DETECTION_RATE)
 
                 # In this case, likelihood is automatically 0, and max(0, DETECTION_FAILURE_RATE) = DETECTION_FAILURE_RATE

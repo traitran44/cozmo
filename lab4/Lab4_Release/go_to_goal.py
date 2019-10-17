@@ -110,7 +110,7 @@ async def marker_processing(robot, camera_settings, show_diagnostic_image=False)
     image = color.rgb2gray(image)
 
     # Detect the markers
-    markers, diag = detect.detect_markers(image, camera_settings, include_diagnostics=True)
+    markers, diag = detect.detect_markers(image, camera_settings, include_diagnostics=True, opencv = True)
 
     # Measured marker list for the particle filter, scaled by the grid scale
     marker_list = [marker['xyh'] for marker in markers]
@@ -148,32 +148,65 @@ async def run(robot: cozmo.robot.Robot):
         [ 0, fy, cy],
         [ 0,  0,  1]
     ], dtype=np.float)
-
-    while True:
-        for i in range(4):
-            await robot.drive_straight(cozmo.util.distance_mm(2.5), cozmo.util.speed_mmps(1.25)).wait_for_completed()
-            curr_pose = cozmo.util.Pose(cozmo.util.distance_mm(2.5 + last_pose.position.x), cozmo.util.distance_mm(last_pose.position.y),
-                0, angle_z = last_pose.rotation.angle_z)
-            odom = compute_odometry(curr_pose)
-            pf.particles = motion_update(pf.particles, odom)
-            marker_list, annotated_image = marker_processing(robot, camera_settings)
-            pf.particles = measurement_update(pf.particles, marker_list, grid)
-            m_x, m_y, m_h, m_confident = compute_mean_pose(pf.particles)
-            last_pose = cozmo.util.Pose(cozmo.util.distance_mm(m_x), cozmo.util.distance_mm(m_y), 0, angle_z = cozmo.util.degrees(m_h))
-            if m_confident:
-                print("converged")
-        for i in range(3):
-            await robot.turn_in_place(cozmo.util.degrees(30), speed = cozmo.util.degrees(15)).wait_for_completed()
-            curr_pose = cozmo.util.Pose(cozmo.util.distance_mm(last_pose.position.x), cozmo.util.distance_mm(last_pose.position.y),
-                0, angle_z = cozmo.util.degrees(30 + last_pose.rotation.angle_z.degrees))
-            odom = compute_odometry(curr_pose)
-            pf.particles = motion_update(pf.particles, odom)
-            marker_list, annotated_image = marker_processing(robot, camera_settings)
-            pf.particles = measurement_update(pf.particles, marker_list, grid)
-            m_x, m_y, m_h, m_confident = compute_mean_pose(pf.particles)
-            last_pose = cozmo.util.Pose(cozmo.util.distance_mm(m_x), cozmo.util.distance_mm(m_y), 0, angle_z = cozmo.util.degrees(m_h))
-            if m_confident:
-                print("converged")
+    distance = 20
+    duration = 1
+    degrees = 20
+    turn_duration = 0.25
+    await robot.set_head_angle(cozmo.util.degrees(5)).wait_for_completed()
+    # last_pose = robot.pose
+    m_confident = False
+    # while True:
+    #     if robot.is_picked_up:
+    #         robot.stop_all_motors()
+    #         last_pose = cozmo.util.Pose(0,0,0,angle_z=cozmo.util.degrees(0))
+    #         await robot.play_anim_trigger(cozmo.anim.Triggers.CodeLabUnhappy).wait_for_completed()
+    #         pf = ParticleFilter(grid)
+    #         continue
+    #     robot.drive_wheel_motors(15, 0)
+    #     curr_pose = robot.pose
+    #     odom = compute_odometry(curr_pose)
+    #     marker_list, image = await marker_processing(robot, camera_settings)
+    #     m_x, m_y, m_h, m_confident = 0, 0, 0, 0
+    #     if len(marker_list) != 0:
+    #         m_x, m_y, m_h, m_confident = pf.update(odom, marker_list)
+    #     else:
+    #         pf.particles = motion_update(pf.particles, odom)
+    #     gui.show_particles(pf.particles)
+    #     gui.show_mean(m_x, m_y, m_h, m_confident)
+    #     gui.show_camera_image(image)
+    #     gui.updated.set()
+    #     last_pose = curr_pose
+    #     if m_confident:
+    #         print("converged")
+    #         print(m_x, m_y, m_h)
+    #         robot.stop_all_motors()
+    #await robot.turn_in_place(cozmo.util.degrees(goal[2] - m_h), speed = cozmo.util.degrees(45)).wait_for_completed()
+    move = cozmo.util.Pose(x = (2)*grid.scale, y = (3)*grid.scale, z = 0, angle_z = cozmo.util.degrees(37)
+    # if robot.is_picked_up:
+    #     robot.stop_all_motors()
+    #     last_pose = cozmo.util.Pose(0,0,0,angle_z=cozmo.util.degrees(0))
+    #     await robot.play_anim_trigger(cozmo.anim.Triggers.CodeLabUnhappy).wait_for_completed()
+    #     pf = ParticleFilter(grid)
+    #     continue
+    await robot.go_to_pose(move, relative_to_robot = True).wait_for_completed()
+    # for i in range(6):
+        # await robot.turn_in_place(cozmo.util.degrees(degrees), speed = cozmo.util.degrees(degrees/turn_duration)).wait_for_completed()
+        # curr_pose = robot.pose
+        # odom = compute_odometry(curr_pose)
+        # await robot.set_head_angle(cozmo.util.degrees(10)).wait_for_completed()
+        # marker_list, image = await marker_processing(robot, camera_settings)
+        # m_x, m_y, m_h, m_confident = 0, 0, 0, 0
+        # if len(marker_list) != 0:
+        #     m_x, m_y, m_h, m_confident = pf.update(odom, marker_list)
+        # else:
+        #     pf.particles = motion_update(pf.particles, odom)
+        # gui.show_particles(pf.particles)
+        # gui.show_mean(m_x, m_y, m_h, m_confident)
+        # gui.show_camera_image(image)
+        # gui.updated.set()
+        # last_pose = curr_pose
+        # if m_confident:
+        #     print("converged")
 
 
 
