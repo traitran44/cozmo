@@ -13,14 +13,13 @@ MAX_NODES = 20000
 
 def step_from_to(node0, node1, limit=75):
     ########################################################################
-    # TODO: please enter your code below.
-    # 1. If distance between two nodes is less than limit, return node1
-    # 2. Otherwise, return a node in the direction from node0 to node1 whose
-    #    distance to node0 is limit. Recall that each iteration we can move
-    #    limit units at most
-    # 3. Hint: please consider using np.arctan2 function to get vector angle
-    # 4. Note: remember always return a Node object
-    return node1
+    dist = get_dist(node0, node1)
+    if dist < limit:
+        return node1
+    new_x = node0.x + (node1.x - node0.x) * limit / dist
+    new_y = node0.y + (node1.y - node0.y) * limit / dist
+    new_node = Node([new_x, new_y])
+    return new_node
     ############################################################################
 
 
@@ -219,5 +218,12 @@ if __name__ == '__main__':
     stopevent.set()
 
     # cmap = CozMap("maps/map2.json", node_generator)
-    # node = node_generator(cmap)
-    # print(node.x, node.y)
+    # node0 = node_generator(cmap)
+    # node1 = node_generator(cmap)
+    # node2 = step_from_to(node0, node1)
+    # print(node0.x, node0.y)
+    # print(node1.x, node1.y)
+    # print(node2.x, node2.y)
+    # print((node1.x - node0.x)/(node1.y - node0.y))
+    # print((node2.x - node0.x)/(node2.y - node0.y))
+    # print(get_dist(node0, node2))
