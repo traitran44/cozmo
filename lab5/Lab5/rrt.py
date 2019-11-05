@@ -3,6 +3,7 @@ import math
 import sys
 import time
 import numpy as np
+import heapq
 
 from cmap import *
 from gui import *
@@ -49,9 +50,27 @@ def RRT(cmap, start):
         # 3. Limit the distance RRT can move
         # 4. Add one path from nearest node to random node
         #
-        rand_node = None
-        nearest_node = None
-        pass
+        rand_node = cmap.get_random_valid_node()
+        nodes = cmap.get_nodes()
+        node_heap = []
+        for i in range(len(nodes)):
+            heapq.heappush(node_heap, (get_dist(rand_node, nodes[i]), i))
+        tmp_dist, tmp_nearest_index = heapq.heappop(node_heap)
+        tmp_nearest = nodes[tmp_nearest_index]
+        tmp_new = step_from_to(tmp_nearest, rand_node)
+        no_nodes = False
+        while cmap.is_collision_with_obstacles((tmp_nearest, tmp_new)):
+            if len(node_heap) == 0:
+                no_nodes = True
+                break
+            # print(node_heap)
+            tmp_dist, tmp_nearest_index = heapq.heappop(node_heap)
+            tmp_nearest = nodes[tmp_nearest_index]
+            tmp_new = step_from_to(tmp_nearest, rand_node)
+        if no_nodes:
+            continue
+        nearest_node = tmp_nearest
+        rand_node = tmp_new
         ########################################################################
         time.sleep(0.01)
         cmap.add_path(nearest_node, rand_node)
@@ -68,7 +87,6 @@ def RRT(cmap, start):
         print("Smoothed path length: ", len(smoothed_path))
     else:
         print("Please try again :-(")
-
 
 async def CozmoPlanning(robot: cozmo.robot.Robot):
     # Allows access to map and stopevent, which can be used to see if the GUI

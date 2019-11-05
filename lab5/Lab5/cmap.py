@@ -194,7 +194,7 @@ class CozMap:
         self.updated.set()
         self.changes.extend(['node_paths', 'nodes', 'solved' if self._solved else None])
         self.lock.release()
-    
+
 
     def is_solved(self):
         """Return whether a solution has been found
@@ -230,12 +230,28 @@ class CozMap:
         ############################################################################
         # TODO: please enter your code below.
         path = self.get_path()
+        smooth_inds = [0] * len(path)
+        curr = 0
+        next = 1
+        while next < len(path):
+            if self.is_collision_with_obstacles((path[curr], path[next])):
+                curr = next
+                next = curr + 1
+            else:
+                for i in range(curr + 1, next):
+                    smooth_inds[i] = 1
+                next = next + 1
+        path_smoothed = []
+        for i in range(len(smooth_inds)):
+            if smooth_inds[i] == 0:
+                path_smoothed.append(path[i])
+        path = path_smoothed
         return path
 
     def get_path(self):
-        
+
         final_path = None
-        
+
         while final_path is None:
             path = []
             cur = None
@@ -248,7 +264,7 @@ class CozMap:
                     path.append(cur)
                     break
             final_path = path[::-1]
-        
+
         return final_path
 
     def is_solved(self):
