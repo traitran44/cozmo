@@ -228,7 +228,6 @@ class CozMap:
 
     def compute_smooth_path(self, limit=75):
         ############################################################################
-        # TODO: please enter your code below.
         path = self.get_path()
         smooth_inds = [0] * len(path)
         curr = 0
