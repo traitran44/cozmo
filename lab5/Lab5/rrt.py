@@ -293,9 +293,9 @@ if __name__ == '__main__':
         cmap = CozMap("maps/map2.json", node_generator)
         sim = RRTThread()
         sim.start()
-    # visualizer = Visualizer(cmap)
-    # visualizer.start()
-    # stopevent.set()
+        visualizer = Visualizer(cmap)
+        visualizer.start()
+        stopevent.set()
 
     # cmap = CozMap("maps/map2.json", node_generator)
     # node0 = node_generator(cmap)
