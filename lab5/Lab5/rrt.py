@@ -80,15 +80,24 @@ def RRT(cmap, start):
     else:
         print("Please try again :-(")
 
-async def CozmoPlanning(robot: cozmo.robot.Robot):
+# async def object_handler(self, *args, **kwargs):
+#     print(args)
+#     print(kwargs)
+
+async def CozmoPlanning(conn):
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
     global cmap, stopevent
-
+    robot = await conn.wait_for_robot()
+    robot.camera.image_stream_enabled = True
+    robot.camera.color_image_enabled = False
+    robot.camera.enable_auto_exposure()
+    robot.set_head_angle(cozmo.util.degrees(0))
+    # robot.add_event_handler(cozmo.objects.EvtObjectObserved, object_handler)
+    print("head angle: ", robot.head_angle)
     ########################################################################
-    # TODO: please enter your code below.
-    # Description of function provided in instructions
-
+    while True:
+        await detect_cube_and_update_cmap(robot, [], Node([0, 0]))
 
 def get_global_node(local_angle, local_origin, node):
     """Helper function: Transform the node's position (x,y) from local coordinate frame specified by local_origin and local_angle to global coordinate frame.
@@ -125,6 +134,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
         update_cmap -- when a new obstacle or a new valid goal is detected, update_cmap will set to True
         goal_center -- when a new valid goal is added, the center of the goal cube will be returned
     """
+    print("function")
     global cmap
 
     # Padding of objects and the robot for C-Space
@@ -137,6 +147,8 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
 
     # Time for the robot to detect visible cubes
     time.sleep(1)
+    for obj in robot.world.visible_objects:
+        print(robot.world.visible_objects)
 
     for obj in robot.world.visible_objects:
 
@@ -151,6 +163,8 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
 
         object_pos = Node((cozmo_pos.x+dx, cozmo_pos.y+dy))
         object_angle = obj.pose.rotation.angle_z.radians
+        print("object_pos: ", object_pos.x, object_pos.y)
+        print("object_angle: ", object_angle)
 
         # The goal cube is defined as robot.world.light_cubes[cozmo.objects.LightCube1Id].object_id
         if robot.world.light_cubes[cozmo.objects.LightCube1Id].object_id == obj.object_id:
@@ -180,17 +194,19 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
     return update_cmap, goal_center, marked
 
 
-class RobotThread(threading.Thread):
-    """Thread to run cozmo code separate from main thread
-    """
-
-    def __init__(self):
-        threading.Thread.__init__(self, daemon=True)
-
-    def run(self):
-        # Please refrain from enabling use_viewer since it uses tk, which must be in main thread
-        cozmo.run_program(CozmoPlanning,use_3d_viewer=False, use_viewer=False)
-        stopevent.set()
+# class RobotThread(threading.Thread):
+#     """Thread to run cozmo code separate from main thread
+#     """
+#
+#     def __init__(self):
+#         threading.Thread.__init__(self, daemon=True)
+#
+#     def run(self):
+#         # Please refrain from enabling use_viewer since it uses tk, which must be in main thread
+#         cozmo.setup_basic_logging()
+#         cozmo.connect(CozmoPlanning)
+#         # cozmo.run_program(CozmoPlanning,use_3d_viewer=False, use_viewer=False)
+#         stopevent.set()
 
 
 class RRTThread(threading.Thread):
@@ -215,17 +231,21 @@ if __name__ == '__main__':
     for i in range(0,len(sys.argv)):
         if (sys.argv[i] == "-robot"):
             robotFlag = True
+
     if (robotFlag):
         cmap = CozMap("maps/emptygrid.json", node_generator)
-        robot_thread = RobotThread()
-        robot_thread.start()
+        # visualizer = Visualizer(cmap)
+        # visualizer.start()
+        cozmo.setup_basic_logging()
+        cozmo.connect(CozmoPlanning)
+        # stopevent.set()
     else:
         cmap = CozMap("maps/map2.json", node_generator)
         sim = RRTThread()
         sim.start()
-    visualizer = Visualizer(cmap)
-    visualizer.start()
-    stopevent.set()
+    # visualizer = Visualizer(cmap)
+    # visualizer.start()
+    # stopevent.set()
 
     # cmap = CozMap("maps/map2.json", node_generator)
     # node0 = node_generator(cmap)
