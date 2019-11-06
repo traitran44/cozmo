@@ -91,15 +91,17 @@ def RRT(cmap, start):
 #     print(kwargs)
 
 async def CozmoPlanning(conn):
+
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
     global cmap, stopevent, initial_angle
-
+    #
     robot = await conn.wait_for_robot()
     robot.camera.image_stream_enabled = True
     robot.camera.color_image_enabled = False
     robot.camera.enable_auto_exposure()
     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+    # await robot.go_to_pose(cozmo.util.Pose(50, 35, 0, angle_z = cozmo.util.radians(0)), relative_to_robot = True).wait_for_completed()
     initial_angle = robot.pose_angle
     marked = {}
     # robot.add_event_handler(cozmo.objects.EvtObjectObserved, object_handler)
@@ -133,7 +135,7 @@ async def CozmoPlanning(conn):
             else:
                 next_dx = path[i + 1].x - cozmo_pos.x
                 next_dy = path[i + 1].y - cozmo_pos.y
-            await robot.go_to_pose(cozmo.util.Pose(dx + robot.pose.position.x, dy + robot.pose.position.y, 0, angle_z = cozmo.util.radians(math.atan(next_dy/next_dx) + robot.pose_angle.radians)), relative_to_robot = False).wait_for_completed()
+            await robot.go_to_pose(cozmo.util.Pose(dx + robot.pose.position.x, dy + robot.pose.position.y, 0, angle_z = robot.pose_angle), relative_to_robot = False).wait_for_completed()
             cozmo_pos = path[i]
             update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, cozmo_pos)
             if update_cmap:
