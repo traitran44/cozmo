@@ -244,6 +244,8 @@ class CozMap:
         for i in range(len(smooth_inds)):
             if smooth_inds[i] == 0:
                 path_smoothed.append(path[i])
+        for i in range(1, len(path_smoothed)):
+            path_smoothed[i].parent = path_smoothed[i-1]
         path = path_smoothed
         return path
 
