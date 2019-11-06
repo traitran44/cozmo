@@ -129,12 +129,12 @@ async def CozmoPlanning(conn):
         for i in range(len(path)):
             dx = path[i].x - cozmo_pos.x
             dy = path[i].y - cozmo_pos.y
-            if i == len(path) - 1:
-                next_dx = path[i].x - cozmo_pos.x
-                next_dy = path[i].y - cozmo_pos.y
-            else:
-                next_dx = path[i + 1].x - cozmo_pos.x
-                next_dy = path[i + 1].y - cozmo_pos.y
+            # if i == len(path) - 1:
+            #     next_dx = path[i].x - cozmo_pos.x
+            #     next_dy = path[i].y - cozmo_pos.y
+            # else:
+            #     next_dx = path[i + 1].x - cozmo_pos.x
+            #     next_dy = path[i + 1].y - cozmo_pos.y
             await robot.go_to_pose(cozmo.util.Pose(dx + robot.pose.position.x, dy + robot.pose.position.y, 0, angle_z = robot.pose_angle), relative_to_robot = False).wait_for_completed()
             cozmo_pos = path[i]
             update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, cozmo_pos)
