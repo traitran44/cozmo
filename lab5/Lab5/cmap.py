@@ -247,6 +247,16 @@ class CozMap:
         for i in range(1, len(path_smoothed)):
             path_smoothed[i].parent = path_smoothed[i-1]
         path = path_smoothed
+        if len(path) > 1:
+            curr = 0
+            next = 1
+            while next < len(path):
+                if get_dist(path[curr], path[next]) > 75.:
+                    n_node = Node([(path[curr].x + path[next].x)/2, (path[curr].y + path[next].y)/2])
+                    path.insert(next, n_node)
+                else:
+                    curr = curr + 1
+                    next = next + 1
         return path
 
     def get_path(self):
@@ -282,10 +292,19 @@ class CozMap:
         for goal in self._goals:
             cur = goal
             while cur.parent is not None:
+                print("Cur: %f %f, Start: %f %f" % (cur.x, cur.y, self._start.x, self._start.y))
                 cur = cur.parent
-            if cur == self._start:
+            print("FOUND Cur: %f %f, Start: %f %f" % (cur.x, cur.y, self._start.x, self._start.y))
+            if cur.x == self._start.x and cur.y == self._start.y:
                 return True
         return False
+
+    def reset(self):
+        """Reset the grid so that RRT can run again
+        """
+        self.clear_solved()
+        self.clear_nodes()
+        self.clear_node_paths()
 
     def reset_paths(self):
         """Reset the grid so that RRT can run again, retains goals

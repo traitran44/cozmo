@@ -31,7 +31,7 @@ def node_generator(cmap):
         return rand_node
     valid_node = False
     while not valid_node:
-        rand_node = Node([np.random.rand()*cmap.width, np.random.rand()*cmap.height])
+        rand_node = Node([np.random.rand() * cmap.width, np.random.rand() * cmap.height])
         if (cmap.is_inbound(rand_node) and not cmap.is_inside_obstacles(rand_node)):
             valid_node = True
     ############################################################################
@@ -86,12 +86,12 @@ def RRT(cmap, start):
     else:
         print("Please try again :-(")
 
+
 # async def object_handler(self, *args, **kwargs):
 #     print(args)
 #     print(kwargs)
 
 async def CozmoPlanning(conn):
-
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
     global cmap, stopevent, initial_angle
@@ -107,39 +107,66 @@ async def CozmoPlanning(conn):
     # robot.add_event_handler(cozmo.objects.EvtObjectObserved, object_handler)
     # print("head angle: ", robot.head_angle)
     ########################################################################
-    cozmo_pos = cmap.get_start()
-    update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, cozmo_pos)
+    # cozmo_pos = cmap.get_start()
+    # update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, cozmo_pos)
+    # await robot.go_to_pose(cozmo.util.Pose(203.9123, 96.749, 0, angle_z=cozmo.util.degrees(0)),
+    #                        relative_to_robot=True).wait_for_completed()
+    at_center = False
     while True:
         # print(update_cmap)
-        if not update_cmap:
-            print("goal not found")
-            break
-        path = RRT(cmap, cozmo_pos)
-        if len(path) > 1:
-            curr = 0
-            next = 1
-            while next < len(path):
-                if get_dist(path[curr], path[next]) > 75.:
-                    n_node = Node([(path[curr].x + path[next].x)/2, (path[curr].y + path[next].y)/2])
-                    path.insert(next, n_node)
-                    print(path)
-                else:
-                    curr = curr + 1
-                    next = next + 1
-        for i in range(len(path)):
-            dx = path[i].x - cozmo_pos.x
-            dy = path[i].y - cozmo_pos.y
-            # if i == len(path) - 1:
-            #     next_dx = path[i].x - cozmo_pos.x
-            #     next_dy = path[i].y - cozmo_pos.y
-            # else:
-            #     next_dx = path[i + 1].x - cozmo_pos.x
-            #     next_dy = path[i + 1].y - cozmo_pos.y
-            await robot.go_to_pose(cozmo.util.Pose(dx + robot.pose.position.x, dy + robot.pose.position.y, 0, angle_z = robot.pose_angle), relative_to_robot = False).wait_for_completed()
-            cozmo_pos = path[i]
-            update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, cozmo_pos)
-            if update_cmap:
-                break
+        # If new change to the map, clear the path and re-compute
+        robot_pos_n = Node((robot.pose.position.x, robot.pose.position.y))
+        cmap.set_start(robot_pos_n)
+        update_cmap, goal_center, marked = await detect_cube_and_update_cmap(robot, marked, robot_pos_n)
+        if update_cmap:
+            cmap.reset()
+            cmap.reset_paths()
+
+        # If not solved, try to solve the map
+        if not cmap.is_solved():
+            if goal_center == None and len(cmap.get_goals()) == 0:
+                next_pose = cozmo.util.Pose(
+                    cmap.width / 2,
+                    cmap.height / 2,
+                    0,
+                    angle_z=robot.pose_angle
+                )
+                if not at_center:
+                    at_center = True
+                    await robot.go_to_pose(next_pose).wait_for_completed()
+                await robot.turn_in_place(cozmo.util.degrees(45)).wait_for_completed()
+                continue
+
+            # set the start and solve RRT.
+            if len(cmap.get_goals()) > 0:
+                cmap.set_start(Node((robot.pose.position.x, robot.pose.position.y)))
+                RRT(cmap, cmap.get_start())
+                if cmap.is_solved():
+                    path = cmap.get_smooth_path()
+                    next_indx = 1
+
+        # head to the goal
+        if cmap.is_solved():
+            if next_indx == len(path):
+                print("Arrived")
+                continue
+
+            last_way_point = path[next_indx - 1]
+            next_way_point = path[next_indx]
+            end_angle = math.atan2(
+                next_way_point.y - last_way_point.y,
+                next_way_point.x - last_way_point.x
+            )
+
+            next_pose = cozmo.util.Pose(
+                next_way_point.x,
+                next_way_point.y,
+                0,
+                angle_z=cozmo.util.Angle(end_angle)
+            )
+            await robot.go_to_pose(next_pose).wait_for_completed()
+            next_indx += 1
+
 
 def get_global_node(local_angle, local_origin, node, robot):
     """Helper function: Transform the node's position (x,y) from local coordinate frame specified by local_origin and local_angle to global coordinate frame.
@@ -154,8 +181,10 @@ def get_global_node(local_angle, local_origin, node, robot):
     """
     ########################################################################
     global initial_angle
-    block_angle = local_angle + robot.pose_angle.radians - initial_angle.radians
-    goal_node_matrix = np.array([[math.cos(block_angle), -math.sin(block_angle)], [math.sin(block_angle), math.cos(block_angle)]]).dot(np.array([[node.x], [node.y]]))
+    block_angle = local_angle
+    goal_node_matrix = np.array(
+        [[math.cos(block_angle), -math.sin(block_angle)], [math.sin(block_angle), math.cos(block_angle)]]).dot(
+        np.array([[node.x], [node.y]]))
     goal_node_arr = goal_node_matrix.flatten()
     goal_node = Node(list(goal_node_arr))
     new_node = Node([local_origin.x + goal_node.x, local_origin.y + goal_node.y])
@@ -199,7 +228,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
 
     for obj in robot.world.visible_objects:
 
-        if obj.object_id in marked.keys():
+        if obj.object_id in marked:
             continue
 
         # Calculate the object pose in G_Arena
@@ -209,7 +238,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
         dx = obj.pose.position.x - robot.pose.position.x
         dy = obj.pose.position.y - robot.pose.position.y
 
-        object_pos = Node((cozmo_pos.x+dx, cozmo_pos.y+dy))
+        object_pos = Node((cozmo_pos.x + dx, cozmo_pos.y + dy))
         object_angle = obj.pose.rotation.angle_z.radians
         print("object_pos: ", object_pos.x, object_pos.y)
         print("object_angle: ", obj.pose.rotation.angle_z.degrees)
@@ -246,19 +275,19 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
     return update_cmap, goal_center, marked
 
 
-# class RobotThread(threading.Thread):
-#     """Thread to run cozmo code separate from main thread
-#     """
-#
-#     def __init__(self):
-#         threading.Thread.__init__(self, daemon=True)
-#
-#     def run(self):
-#         # Please refrain from enabling use_viewer since it uses tk, which must be in main thread
-#         cozmo.setup_basic_logging()
-#         cozmo.connect(CozmoPlanning)
-#         # cozmo.run_program(CozmoPlanning,use_3d_viewer=False, use_viewer=False)
-#         stopevent.set()
+class RobotThread(threading.Thread):
+    """Thread to run cozmo code separate from main thread
+    """
+
+    def __init__(self):
+        threading.Thread.__init__(self, daemon=True)
+
+    def run(self):
+        # Please refrain from enabling use_viewer since it uses tk, which must be in main thread
+        cozmo.setup_basic_logging()
+        cozmo.connect(CozmoPlanning)
+        # cozmo.run_program(CozmoPlanning,use_3d_viewer=False, use_viewer=False)
+        stopevent.set()
 
 
 class RRTThread(threading.Thread):
@@ -280,7 +309,7 @@ if __name__ == '__main__':
     global cmap, stopevent
     stopevent = threading.Event()
     robotFlag = False
-    for i in range(0,len(sys.argv)):
+    for i in range(0, len(sys.argv)):
         if (sys.argv[i] == "-robot"):
             robotFlag = True
 
@@ -288,16 +317,18 @@ if __name__ == '__main__':
         cmap = CozMap("maps/emptygrid.json", node_generator)
         # visualizer = Visualizer(cmap)
         # visualizer.start()
-        cozmo.setup_basic_logging()
-        cozmo.connect(CozmoPlanning)
+        # cozmo.setup_basic_logging()
+        # cozmo.connect(CozmoPlanning)
         # stopevent.set()
+        robot_thread = RobotThread()
+        robot_thread.start()
     else:
         cmap = CozMap("maps/map2.json", node_generator)
         sim = RRTThread()
         sim.start()
-        visualizer = Visualizer(cmap)
-        visualizer.start()
-        stopevent.set()
+    visualizer = Visualizer(cmap)
+    visualizer.start()
+    stopevent.set()
 
     # cmap = CozMap("maps/map2.json", node_generator)
     # node0 = node_generator(cmap)
