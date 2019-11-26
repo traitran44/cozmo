@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="903e5715-abaf-4cf4-b951-9f3fe210d034" name="Default Changelist" comment="kk">
-      <change beforePath="$PROJECT_DIR$/cmap.py" beforeDir="false" afterPath="$PROJECT_DIR$/cmap.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maps/emptygrid.json" beforeDir="false" afterPath="$PROJECT_DIR$/maps/emptygrid.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rrt.py" beforeDir="false" afterPath="$PROJECT_DIR$/rrt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,12 +11,12 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="600">
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/rrt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="410">
-              <caret line="182" column="14" selection-start-line="182" selection-start-column="14" selection-end-line="182" selection-end-column="14" />
+            <state relative-caret-position="943">
+              <caret line="189" column="41" selection-start-line="189" selection-start-column="41" selection-end-line="189" selection-end-column="41" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -29,7 +27,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/util.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="385">
+            <state relative-caret-position="13981">
               <caret line="344" column="8" selection-start-line="344" selection-start-column="8" selection-end-line="344" selection-end-column="8" />
             </state>
           </provider>
@@ -47,7 +45,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/cmap.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-737">
+            <state relative-caret-position="12218">
               <caret line="301" column="8" selection-start-line="301" selection-start-column="8" selection-end-line="301" selection-end-column="8" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
@@ -59,7 +57,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="385">
+            <state relative-caret-position="19967">
               <caret line="510" selection-start-line="510" selection-end-line="510" />
             </state>
           </provider>
@@ -68,17 +66,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/robot.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="370">
+            <state relative-caret-position="80524">
               <caret line="1985" column="8" selection-start-line="1985" selection-start-column="8" selection-end-line="1985" selection-end-column="8" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/maps/emptygrid.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="410">
-              <caret line="10" column="48" selection-start-line="7" selection-end-line="10" selection-end-column="54" />
             </state>
           </provider>
         </entry>
@@ -160,18 +149,19 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1573073313771</updated>
-      <workItem from="1573073315068" duration="20847000" />
+      <workItem from="1573073315068" duration="21189000" />
+      <workItem from="1573137670135" duration="975000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="20847000" />
+    <option name="totallyTimeSpent" value="22164000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="35" width="3840" height="2125" extended-state="6" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.24986666" />
+      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.2528" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Floobits" order="0" />
       <window_info anchor="bottom" id="Database Changes" order="1" />
@@ -198,24 +188,33 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/run.py">
+    <entry file="file://$PROJECT_DIR$/maps/emptygrid.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="385">
-          <caret line="510" selection-start-line="510" selection-end-line="510" />
+        <state relative-caret-position="410">
+          <caret line="10" column="48" selection-start-line="7" selection-end-line="10" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gradecase2.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gradecase1.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rrt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="943">
+          <caret line="189" column="41" selection-start-line="189" selection-start-column="41" selection-end-line="189" selection-end-column="41" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/util.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="385">
+        <state relative-caret-position="13981">
           <caret line="344" column="8" selection-start-line="344" selection-start-column="8" selection-end-line="344" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/robot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="370">
-          <caret line="1985" column="8" selection-start-line="1985" selection-start-column="8" selection-end-line="1985" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -228,7 +227,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cmap.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-737">
+        <state relative-caret-position="12218">
           <caret line="301" column="8" selection-start-line="301" selection-start-column="8" selection-end-line="301" selection-end-column="8" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
@@ -236,20 +235,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/maps/emptygrid.json">
+    <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="10" column="48" selection-start-line="7" selection-end-line="10" selection-end-column="54" />
+        <state relative-caret-position="19967">
+          <caret line="510" selection-start-line="510" selection-end-line="510" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rrt.py">
+    <entry file="file://$USER_HOME$/anaconda3/envs/lab2/lib/python3.7/site-packages/cozmo/robot.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="182" column="14" selection-start-line="182" selection-start-column="14" selection-end-line="182" selection-end-column="14" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="80524">
+          <caret line="1985" column="8" selection-start-line="1985" selection-start-column="8" selection-end-line="1985" selection-end-column="8" />
         </state>
       </provider>
     </entry>
