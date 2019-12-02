@@ -44,7 +44,7 @@ async def CozmoPID(robot: cozmo.robot.Robot):
         print("Velocity: ", velocity)
         if abs(velocity) < 20:
             print("Arrived at goal")
-            robot.drive_wheel_motors(0, 0)
+            drive(robot, 0)
             break
         await drive(robot, velocity)
         await asyncio.sleep(0.01)
