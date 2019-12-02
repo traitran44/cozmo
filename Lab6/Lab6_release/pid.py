@@ -6,6 +6,7 @@ import sys
 import time
 import numpy as np
 import asyncio
+import time
 
 
 async def CozmoPID(robot: cozmo.robot.Robot):
@@ -16,6 +17,8 @@ async def CozmoPID(robot: cozmo.robot.Robot):
     ki = config["ki"]
     kd = config["kd"]
     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+    await robot.set_lift_height(1).wait_for_completed()
+    robot.move_lift(1.5)
     if robot.world.visible_object_count() > 0:
         for obj in robot.world.visible_objects:
             cube = obj
@@ -25,13 +28,26 @@ async def CozmoPID(robot: cozmo.robot.Robot):
         return
     robot.pose.position._x = 0
     robot.pose.position._y = 0
+    robot.pose._rotation = cozmo.util.Rotation(0, 0, 0, 0)
     cube_pos = cube.pose.position.x
+    # total_dist = 0
+    dist = cube_pos - 140 - robot.pose.position.x
     while True:
         # print(robot.pose.position.x)
-        dist = cube_pos - 100 - robot.pose.position.x
-        velocity = kp*dist
-        await robot.drive_wheels(velocity, velocity)
-        await asyncio.sleep(1)
+        prev_dist = dist
+        dist = cube_pos - 140 - robot.pose.position.x
+        # total_dist = ki * (total_dist + dist)
+        dist_change = dist - prev_dist
+        # if dist_change == 0:
+        #     dist_change = 1
+        velocity = kp*dist + kd*dist_change
+        print("Velocity: ", velocity)
+        if abs(velocity) < 20:
+            print("Arrived at goal")
+            await robot.drive_wheel_motors(0, 0)
+            break
+        await robot.drive_wheel_motors(velocity, velocity)
+        await asyncio.sleep(0.01)
 
 
 class RobotThread(threading.Thread):
