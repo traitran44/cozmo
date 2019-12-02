@@ -44,10 +44,13 @@ async def CozmoPID(robot: cozmo.robot.Robot):
         print("Velocity: ", velocity)
         if abs(velocity) < 20:
             print("Arrived at goal")
-            await robot.drive_wheel_motors(0, 0)
+            robot.drive_wheel_motors(0, 0)
             break
-        await robot.drive_wheel_motors(velocity, velocity)
+        await drive(robot, velocity)
         await asyncio.sleep(0.01)
+
+async def drive(robot, velocity):
+    robot.drive_wheel_motors(velocity, velocity)
 
 
 class RobotThread(threading.Thread):
